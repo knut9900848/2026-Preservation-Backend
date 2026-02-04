@@ -16,8 +16,7 @@ class CheckSheetItemResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'equipment_id' => $this->equipment_id,
-            'equipment_name' => $this->equipment?->name,
+            'equipment' => new EquipmentResource($this->whenLoaded('equipment', $this->equipment)),
             'check_sheet_id' => $this->check_sheet_id,
             'activity' => $this->activity,
             'description' => $this->description,

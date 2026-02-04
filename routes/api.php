@@ -26,13 +26,13 @@ Route::get('/user', function (Request $request) {
 
 Route::group(['namespace' => 'App\Http\Controllers\API'], function () {
     // --------------- Register and Login ----------------//
-    Route::post('register', 'AuthenticationController@register')->name('register');
-    Route::post('login', 'AuthenticationController@login')->name('login');
+    Route::post('register', [\App\Http\Controllers\API\AuthenticationController::class, 'register'])->name('register');
+    Route::post('login', [\App\Http\Controllers\API\AuthenticationController::class, 'login'])->name('login');
 
     // ------------------ Get Data ----------------------//
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('get-user', 'AuthenticationController@userInfo')->name('get-user');
-        Route::post('logout', 'AuthenticationController@logOut')->name('logout');
+        Route::get('get-user', [\App\Http\Controllers\API\AuthenticationController::class, 'userInfo'])->name('get-user');
+        Route::post('logout', [\App\Http\Controllers\API\AuthenticationController::class, 'logOut'])->name('logout');
     });
 });
 
@@ -52,26 +52,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Equipment CheckSheets - use ?equipment_id=X to get checksheets for specific equipment
     Route::get('equipments/{equipment}/checksheets', [EquipmentCheckSheetController::class, 'getCheckSheets']);
-    Route::get('equipments/{equipment}/checksheets/form-options', [EquipmentCheckSheetController::class, 'formOptions']);
-    Route::get('equipments/{equipment}/checksheets/users-by-role', [EquipmentCheckSheetController::class, 'getUsersByRole']);
-    Route::get('equipments/{equipment}/checksheets/{checkSheet}/checksheet-items', [EquipmentCheckSheetController::class, 'getCheckSheetItems']);
-    Route::put('equipments/{equipment}/checksheets/{checkSheet}/updateDueDate', [EquipmentCheckSheetController::class, 'updateDueDate']);
-    Route::post('equipments/{equipment}/checksheets/{checkSheet}/assign-technicians', [EquipmentCheckSheetController::class, 'assignTechnicians']);
-    Route::post('equipments/{equipment}/checksheets/{checkSheet}/revoke-technicians', [EquipmentCheckSheetController::class, 'revokeTechnicians']);
-    Route::post('equipments/{equipment}/checksheets/{checkSheet}/assign-inspectors', [EquipmentCheckSheetController::class, 'assignInspectors']);
-    Route::post('equipments/{equipment}/checksheets/{checkSheet}/revoke-inspectors', [EquipmentCheckSheetController::class, 'revokeInspectors']);
-
-    // Equipment CheckSheet Workflow
-    Route::put('equipments/{equipment}/checksheets/{checkSheet}/complete', [EquipmentCheckSheetController::class, 'completeChecksheet']);
-    Route::put('equipments/{equipment}/checksheets/{checkSheet}/review', [EquipmentCheckSheetController::class, 'reviewChecksheet']);
-    Route::put('equipments/{equipment}/checksheets/{checkSheet}/approve', [EquipmentCheckSheetController::class, 'approveChecksheet']);
-    Route::put('equipments/{equipment}/checksheets/{checkSheet}/reject', [EquipmentCheckSheetController::class, 'rejectChecksheet']);
-    Route::get('equipments/{equipment}/checksheets/{checkSheet}/history', [EquipmentCheckSheetController::class, 'getCheckSheetHistory']);
-    Route::post('equipments/{equipment}/checksheets/{checkSheet}/generate-next-round', [EquipmentCheckSheetController::class, 'generateNextRoundChecksheet']);
-
-
-    // Equipment CheckSheet Items
-    Route::apiResource('equipments/{equipment}/checksheets/{checkSheet}/checksheet-items', EquipmentCheckSheetItemController::class);
 
     // Activity form options - use ?equipment_id=X to get activities for specific equipment with assignment status
     Route::get('activities/form-options', [ActivityController::class, 'formOptions']);
