@@ -263,6 +263,32 @@ class CheckSheetController extends Controller
     }
 
     /**
+     * Save Draft - Update checksheet items without changing status
+     */
+    public function saveDraftCheckSheet(Request $request, CheckSheet $checkSheet)
+    {
+        $validated = $request->validate([
+            'checksheet_items' => 'required|array',
+            'checksheet_items.*.id' => 'required|exists:check_sheet_items,id',
+            'checksheet_items.*.status' => 'required|integer|min:0|max:3',
+            'checksheet_items.*.remarks' => 'nullable|string',
+        ]);
+
+        foreach ($validated['checksheet_items'] as $item) {
+            \App\Models\CheckSheetItem::where('id', $item['id'])
+                ->where('check_sheet_id', $checkSheet->id)
+                ->update([
+                    'status' => $item['status'],
+                    'remarks' => $item['remarks'] ?? null,
+                ]);
+        }
+
+        return response()->json([
+            'message' => 'Draft saved successfully',
+        ]);
+    }
+
+    /**
      * Complete checksheet - Step 1: Draft -> Completed
      */
     public function completeChecksheet(Request $request, CheckSheet $checkSheet)
@@ -278,6 +304,16 @@ class CheckSheetController extends Controller
             'checksheet_items.*.id' => 'required|exists:check_sheet_items,id',
             'checksheet_items.*.status' => 'required|integer|min:0|max:3',
         ]);
+
+        // Check if any item has status 1 (incomplete/pending)
+        $hasIncompleteItems = collect($validated['checksheet_items'])
+            ->contains(fn($item) => $item['status'] === 1);
+
+        if ($hasIncompleteItems) {
+            return response()->json([
+                'message' => 'Cannot complete checksheet with incomplete items (status 1)'
+            ], 400);
+        }
 
         $previousStatus = $checkSheet->status;
 

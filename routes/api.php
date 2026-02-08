@@ -17,6 +17,7 @@ use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\UserRoleController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\CheckSheetPhotoController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -92,12 +93,20 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('checksheets/{checkSheet}/revoke-inspectors', [CheckSheetController::class, 'revokeInspectors']);
 
     // CheckSheet Workflow
+    Route::put('checksheets/{checkSheet}/save-draft', [CheckSheetController::class, 'saveDraftCheckSheet']);
     Route::put('checksheets/{checkSheet}/complete', [CheckSheetController::class, 'completeChecksheet']);
     Route::put('checksheets/{checkSheet}/review', [CheckSheetController::class, 'reviewChecksheet']);
     Route::put('checksheets/{checkSheet}/approve', [CheckSheetController::class, 'approveChecksheet']);
     Route::put('checksheets/{checkSheet}/reject', [CheckSheetController::class, 'rejectChecksheet']);
     Route::get('checksheets/{checkSheet}/history', [CheckSheetController::class, 'getCheckSheetHistory']);
     Route::post('checksheets/{checkSheet}/generate-next-round', [CheckSheetController::class, 'generateNextRoundChecksheet']);
+
+    // CheckSheet Photo Groups
+    Route::get('checksheets/{checkSheet}/photo-groups', [CheckSheetPhotoController::class, 'index']);
+    Route::post('checksheets/{checkSheet}/photo-groups', [CheckSheetPhotoController::class, 'store']);
+    Route::put('checksheets/{checkSheet}/photo-groups/{photoGroup}', [CheckSheetPhotoController::class, 'update']);
+    Route::delete('checksheets/{checkSheet}/photo-groups/{photoGroup}', [CheckSheetPhotoController::class, 'destroy']);
+    Route::delete('checksheets/{checkSheet}/photo-groups/{photoGroup}/photos/{photo}', [CheckSheetPhotoController::class, 'destroyPhoto']);
 
     // CRUD APIs
     Route::apiResource('suppliers', SupplierController::class);

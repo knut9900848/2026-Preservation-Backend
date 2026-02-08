@@ -94,4 +94,9 @@ class CheckSheet extends Model
     {
         return $this->hasMany(CheckSheetHistory::class);
     }
+
+    public function photoGroups()
+    {
+        return $this->hasMany(CheckSheetPhotoGroup::class)->orderBy('order');
+    }
 }
