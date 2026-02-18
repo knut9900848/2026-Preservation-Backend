@@ -30,6 +30,9 @@ class DatabaseSeeder extends Seeder
             SubCategorySeeder::class,
             EquipmentSeeder::class,
             ActivitySeeder::class,
+            DisciplineSeeder::class,
+            DisciplineItemSeeder::class,
+            SettingSeeder::class,
         ]);
     }
 }

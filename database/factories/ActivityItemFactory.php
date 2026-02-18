@@ -19,8 +19,8 @@ class ActivityItemFactory extends Factory
     {
         return [
             'activity_id' => Activity::factory(),
-            'activity' => fake()->sentence(4),
             'description' => fake()->sentence(),
+            'remark' => fake()->paragraph(),
             'order' => fake()->numberBetween(1, 20),
             'is_active' => fake()->boolean(95),
         ];

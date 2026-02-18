@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\ActivityResource;
 use App\Models\Activity;
+use App\Models\Discipline;
+use App\Models\DisciplineItem;
 use App\Models\Equipment;
 use Illuminate\Http\Request;
 
@@ -39,7 +41,7 @@ class ActivityController extends Controller
         }
 
         // Normal pagination flow
-        $query = Activity::with(['assignedEquipments', 'activityItems']);
+        $query = Activity::with(['discipline', 'disciplineItem', 'assignedEquipments', 'activityItems']);
 
         // Filter by is_active
         if ($request->has('is_active') && $request->is_active !== null) {
@@ -80,6 +82,13 @@ class ActivityController extends Controller
     public function formOptions()
     {
         return response()->json([
+            'disciplines' => Discipline::where('is_active', true)
+                ->orderBy('name')
+                ->get(['id', 'name', 'code']),
+            'discipline_items' => DisciplineItem::where('is_active', true)
+                ->orderBy('discipline_id')
+                ->orderBy('code')
+                ->get(['id', 'discipline_id', 'code', 'name', 'method']),
             'equipments' => Equipment::where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name', 'tag_no']),
@@ -92,15 +101,21 @@ class ActivityController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'code' => 'required|string|unique:activities,code',
+            'discipline_id' => 'required|exists:disciplines,id',
+            'discipline_item_id' => 'required|exists:discipline_items,id',
             'description' => 'required|string',
             'notes' => 'nullable|string',
             'frequency' => 'required|integer|min:1',
             'is_active' => 'boolean',
         ]);
 
+        // Generate code: {discipline item code}-{frequency padded}
+        $disciplineItem = DisciplineItem::findOrFail($validated['discipline_item_id']);
+        $frequencyPadded = str_pad($validated['frequency'], 2, '0', STR_PAD_LEFT);
+        $validated['code'] = "{$disciplineItem->code}-{$frequencyPadded}";
+
         $activity = Activity::create($validated);
-        $activity->load(['assignedEquipments', 'activityItems']);
+        $activity->load(['discipline', 'disciplineItem', 'assignedEquipments', 'activityItems']);
 
         return response()->json([
             'activity' => new ActivityResource($activity)
@@ -112,7 +127,7 @@ class ActivityController extends Controller
      */
     public function show(Activity $activity)
     {
-        $activity->load(['assignedEquipments', 'activityItems']);
+        $activity->load(['discipline', 'disciplineItem', 'assignedEquipments', 'activityItems']);
         return response()->json([
             'activity' => new ActivityResource($activity)
         ]);
@@ -124,15 +139,28 @@ class ActivityController extends Controller
     public function update(Request $request, Activity $activity)
     {
         $validated = $request->validate([
-            'code' => 'sometimes|required|string|unique:activities,code,' . $activity->id,
+            'discipline_id' => 'sometimes|required|exists:disciplines,id',
+            'discipline_item_id' => 'sometimes|required|exists:discipline_items,id',
             'description' => 'sometimes|required|string',
             'notes' => 'nullable|string',
             'frequency' => 'sometimes|required|integer|min:1',
             'is_active' => 'boolean',
         ]);
 
+        // Regenerate code if discipline_item or frequency changed
+        if (
+            isset($validated['discipline_item_id']) && $validated['discipline_item_id'] !== $activity->discipline_item_id
+            || isset($validated['frequency']) && $validated['frequency'] !== $activity->frequency
+        ) {
+            $disciplineItemId = $validated['discipline_item_id'] ?? $activity->discipline_item_id;
+            $disciplineItem = DisciplineItem::findOrFail($disciplineItemId);
+            $frequency = $validated['frequency'] ?? $activity->frequency;
+            $frequencyPadded = str_pad($frequency, 2, '0', STR_PAD_LEFT);
+            $validated['code'] = "{$disciplineItem->code}-{$frequencyPadded}";
+        }
+
         $activity->update($validated);
-        $activity->load(['assignedEquipments', 'activityItems']);
+        $activity->load(['discipline', 'disciplineItem', 'assignedEquipments', 'activityItems']);
 
         return response()->json([
             'activity' => new ActivityResource($activity)

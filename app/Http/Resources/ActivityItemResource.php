@@ -17,8 +17,8 @@ class ActivityItemResource extends JsonResource
         return [
             'id' => $this->id,
             'activity_id' => $this->activity_id,
-            'activity' => $this->activity,
             'description' => $this->description,
+            'remark' => $this->comment,
             'order' => $this->order,
             'is_active' => $this->is_active,
             'created_at' => $this->created_at,

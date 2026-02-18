@@ -16,6 +16,14 @@ class ActivityResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'discipline_id' => $this->discipline_id,
+            'discipline' => $this->whenLoaded('discipline', function () {
+                return [
+                    'id' => $this->discipline->id,
+                    'name' => $this->discipline->name,
+                    'code' => $this->discipline->code,
+                ];
+            }),
             'assigned_equipments' => $this->whenLoaded('assignedEquipments', function () {
                 return $this->assignedEquipments->map(function ($equipment) {
                     return [
@@ -24,6 +32,15 @@ class ActivityResource extends JsonResource
                         'tag_no' => $equipment->tag_no,
                     ];
                 });
+            }),
+            'discipline_item_id' => $this->discipline_item_id,
+            'discipline_item' => $this->whenLoaded('disciplineItem', function () {
+                return [
+                    'id' => $this->disciplineItem->id,
+                    'code' => $this->disciplineItem->code,
+                    'name' => $this->disciplineItem->name,
+                    'method' => $this->disciplineItem->method,
+                ];
             }),
             'code' => $this->code,
             'description' => $this->description,

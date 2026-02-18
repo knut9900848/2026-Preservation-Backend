@@ -69,8 +69,8 @@ class ActivityItemController extends Controller
     {
         $validated = $request->validate([
             'activity_id' => 'required|exists:activities,id',
-            'activity' => 'nullable|string',
             'description' => 'nullable|string',
+            'remark' => 'nullable|string',
             'order' => 'required|integer|min:1',
             'is_active' => 'boolean',
         ]);
@@ -101,8 +101,8 @@ class ActivityItemController extends Controller
     {
         $validated = $request->validate([
             'activity_id' => 'sometimes|required|exists:activities,id',
-            'activity' => 'nullable|string',
             'description' => 'nullable|string',
+            'remark' => 'nullable|string',
             'order' => 'sometimes|required|integer|min:1',
             'is_active' => 'boolean',
         ]);

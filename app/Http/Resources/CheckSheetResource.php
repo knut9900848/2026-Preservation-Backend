@@ -22,6 +22,22 @@ class CheckSheetResource extends JsonResource
             'equipment_id' => $this->equipment_id,
             'equipment_name' => $this->equipment?->name,
             'equipment_tag_no' => $this->equipment?->tag_no,
+            'category' => $this->equipment?->category ? [
+                'id' => $this->equipment->category->id,
+                'name' => $this->equipment->category->name,
+            ] : null,
+            'sub_category' => $this->equipment?->subCategory ? [
+                'id' => $this->equipment->subCategory->id,
+                'name' => $this->equipment->subCategory->name,
+            ] : null,
+            'location' => $this->equipment?->currentLocation ? [
+                'id' => $this->equipment->currentLocation->id,
+                'name' => $this->equipment->currentLocation->name,
+            ] : null,
+            'supplier' => $this->equipment?->supplier ? [
+                'id' => $this->equipment->supplier->id,
+                'name' => $this->equipment->supplier->name,
+            ] : null,
             'current_round' => $this->current_round,
             'sheet_number' => $this->sheet_number,
             'reviewed_by' => $this->reviewed_by,
@@ -30,6 +46,7 @@ class CheckSheetResource extends JsonResource
             'performed_date' => $this->performed_date?->format('Y-m-d'),
             'due_date' => $this->due_date?->format('Y-m-d'),
             'notes' => $this->notes,
+            'instruction' => $this->instruction,
             'frequency' => $this->frequency,
             'status' => $this->status,
             'technicians' => $this->whenLoaded('technicians', function () {

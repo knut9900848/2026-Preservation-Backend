@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\EquipmentsExport;
 use App\Http\Resources\EquipmentResource;
 use App\Models\Category;
 use App\Models\CurrentLocation;
@@ -10,6 +11,7 @@ use App\Models\SubCategory;
 use App\Models\Supplier;
 use App\Models\Activity;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class EquipmentController extends Controller
 {
@@ -67,6 +69,16 @@ class EquipmentController extends Controller
             'per_page' => $equipment->perPage(),
             'last_page' => $equipment->lastPage(),
         ]);
+    }
+
+    /**
+     * Export equipment list to Excel
+     */
+    public function export(Request $request)
+    {
+        $filename = 'equipments_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new EquipmentsExport($request), $filename);
     }
 
     /**
@@ -254,7 +266,7 @@ class EquipmentController extends Controller
                     'check_sheet_id' => $checkSheet->id,
                     'activity' => $activityItem->activity,
                     'description' => $activityItem->description,
-                    'status' => 'Draft', // Default: Rejected
+                    'status' => 0, // 0: Draft, 1: Completed, 2: Approved, 3: Accepted
                     'order' => $activityItem->order,
                 ]);
             }

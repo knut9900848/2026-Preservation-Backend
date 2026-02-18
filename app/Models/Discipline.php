@@ -5,24 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class ActivityItem extends Model
+class Discipline extends Model
 {
     use HasFactory;
+
     protected $fillable = [
-        'activity_id',
+        'name',
+        'code',
         'description',
-        'remark',
-        'order',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
-        'order' => 'integer',
     ];
 
-    public function activity()
+    public function activities()
     {
-        return $this->belongsTo(Activity::class);
+        return $this->hasMany(Activity::class);
+    }
+
+    public function disciplineItems()
+    {
+        return $this->hasMany(DisciplineItem::class);
     }
 }

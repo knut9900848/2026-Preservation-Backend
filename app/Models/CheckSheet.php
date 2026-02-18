@@ -21,8 +21,13 @@ class CheckSheet extends Model
         'performed_date',
         'due_date',
         'notes',
+        'instruction',
         'frequency',
         'status',
+    ];
+
+    protected $attributes = [
+        'instruction' => "Preservation Instructions:\nIf the Unit / Equipment is operational or under commissioning, DO NOT execute this check sheet and activities.\nIf any of the Activities are not able to be performed, explain in detail in the Remarks column & inform Preservation Supervisor / Coordinator.\nIf any of the equipment is found to be damaged, a punch list shall be raised.\nEnsure the preservation Label is filled & signed after preservation routine activity.",
     ];
 
     protected $casts = [
@@ -98,5 +103,10 @@ class CheckSheet extends Model
     public function photoGroups()
     {
         return $this->hasMany(CheckSheetPhotoGroup::class)->orderBy('order');
+    }
+
+    public function reports()
+    {
+        return $this->hasMany(CheckSheetReport::class)->orderByDesc('revision_number');
     }
 }

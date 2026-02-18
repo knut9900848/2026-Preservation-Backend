@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\CheckSheetsExport;
 use App\Http\Resources\CheckSheetResource;
 use App\Http\Resources\CheckSheetItemResource;
 use App\Models\Activity;
@@ -9,6 +10,7 @@ use App\Models\CheckSheet;
 use App\Models\CheckSheetHistory;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Maatwebsite\Excel\Facades\Excel;
 
 class CheckSheetController extends Controller
 {
@@ -17,7 +19,13 @@ class CheckSheetController extends Controller
      */
     public function index(Request $request)
     {
-        $query = CheckSheet::with(['activity', 'equipment', 'reviewer', 'checkSheetItems', 'technicians', 'inspectors']);
+        $query = CheckSheet::with(['activity', 'equipment.category', 'equipment.subCategory', 'equipment.currentLocation', 'equipment.supplier', 'reviewer', 'checkSheetItems', 'technicians', 'inspectors']);
+
+        // Technician role: only show checksheets assigned to them
+        $user = $request->user();
+        if ($user && $user->hasRole('technician')) {
+            $query->whereHas('technicians', fn($q) => $q->where('users.id', $user->id));
+        }
 
         // Filter by equipment
         if ($request->has('equipment_id') && $request->equipment_id) {
@@ -37,6 +45,31 @@ class CheckSheetController extends Controller
         // Filter by current_round
         if ($request->has('current_round') && $request->current_round) {
             $query->where('current_round', $request->current_round);
+        }
+
+        // Filter by category
+        if ($request->has('category_id') && $request->category_id) {
+            $query->whereHas('equipment', fn($q) => $q->where('category_id', $request->category_id));
+        }
+
+        // Filter by sub category
+        if ($request->has('sub_category_id') && $request->sub_category_id) {
+            $query->whereHas('equipment', fn($q) => $q->where('sub_category_id', $request->sub_category_id));
+        }
+
+        // Filter by location
+        if ($request->has('current_location_id') && $request->current_location_id) {
+            $query->whereHas('equipment', fn($q) => $q->where('current_location_id', $request->current_location_id));
+        }
+
+        // Filter by supplier
+        if ($request->has('supplier_id') && $request->supplier_id) {
+            $query->whereHas('equipment', fn($q) => $q->where('supplier_id', $request->supplier_id));
+        }
+
+        // Filter by technician
+        if ($request->filled('technician_id')) {
+            $query->whereHas('technicians', fn($q) => $q->where('users.id', $request->technician_id));
         }
 
         // Search filter
@@ -71,6 +104,31 @@ class CheckSheetController extends Controller
             'current_page' => $checkSheets->currentPage(),
             'per_page' => $checkSheets->perPage(),
             'last_page' => $checkSheets->lastPage(),
+        ]);
+    }
+
+    /**
+     * Export check sheets to Excel
+     */
+    public function export(Request $request)
+    {
+        $filename = 'checksheets_' . now()->format('Ymd_His') . '.xlsx';
+
+        return Excel::download(new CheckSheetsExport($request), $filename);
+    }
+
+    /**
+     * Get a single check sheet by ID
+     */
+    public function show(Request $request, CheckSheet $checkSheet)
+    {
+        $user = $request->user();
+        if ($user && $user->hasRole('technician') && !$checkSheet->technicians()->where('users.id', $user->id)->exists()) {
+            return response()->json(['message' => 'You are not assigned to this checksheet'], 403);
+        }
+
+        return response()->json([
+            'check_sheet' => new CheckSheetResource($checkSheet)
         ]);
     }
 
@@ -119,8 +177,28 @@ class CheckSheetController extends Controller
             'technicians.*' => 'exists:users,id',
         ]);
 
+        $previousIds = $checkSheet->technicians()->pluck('users.id')->toArray();
         $checkSheet->technicians()->sync($validated['technicians']);
         $checkSheet->load('technicians');
+
+        $assignedIds = array_values(array_diff($validated['technicians'], $previousIds));
+        $removedIds = array_values(array_diff($previousIds, $validated['technicians']));
+        $assignedNames = User::whereIn('id', $assignedIds)->pluck('name')->toArray();
+        $removedNames = User::whereIn('id', $removedIds)->pluck('name')->toArray();
+
+        if ($assignedNames || $removedNames) {
+            CheckSheetHistory::create([
+                'check_sheet_id' => $checkSheet->id,
+                'user_id' => $request->user()->id,
+                'action' => 'technicians_updated',
+                'from_status' => $checkSheet->status,
+                'to_status' => $checkSheet->status,
+                'metadata' => [
+                    'assigned' => $assignedNames,
+                    'removed' => $removedNames,
+                ],
+            ]);
+        }
 
         return response()->json([
             'message' => 'Technicians assigned successfully',
@@ -144,8 +222,23 @@ class CheckSheetController extends Controller
             'technicians.*' => 'exists:users,id',
         ]);
 
+        $removedNames = User::whereIn('id', $validated['technicians'])->pluck('name')->toArray();
+
         $checkSheet->technicians()->detach($validated['technicians']);
         $checkSheet->load('technicians');
+
+        if ($removedNames) {
+            CheckSheetHistory::create([
+                'check_sheet_id' => $checkSheet->id,
+                'user_id' => $request->user()->id,
+                'action' => 'technicians_revoked',
+                'from_status' => $checkSheet->status,
+                'to_status' => $checkSheet->status,
+                'metadata' => [
+                    'removed' => $removedNames,
+                ],
+            ]);
+        }
 
         return response()->json([
             'message' => 'Technicians revoked successfully',
@@ -169,8 +262,28 @@ class CheckSheetController extends Controller
             'inspectors.*' => 'exists:users,id',
         ]);
 
+        $previousIds = $checkSheet->inspectors()->pluck('users.id')->toArray();
         $checkSheet->inspectors()->sync($validated['inspectors']);
         $checkSheet->load('inspectors');
+
+        $assignedIds = array_values(array_diff($validated['inspectors'], $previousIds));
+        $removedIds = array_values(array_diff($previousIds, $validated['inspectors']));
+        $assignedNames = User::whereIn('id', $assignedIds)->pluck('name')->toArray();
+        $removedNames = User::whereIn('id', $removedIds)->pluck('name')->toArray();
+
+        if ($assignedNames || $removedNames) {
+            CheckSheetHistory::create([
+                'check_sheet_id' => $checkSheet->id,
+                'user_id' => $request->user()->id,
+                'action' => 'inspectors_updated',
+                'from_status' => $checkSheet->status,
+                'to_status' => $checkSheet->status,
+                'metadata' => [
+                    'assigned' => $assignedNames,
+                    'removed' => $removedNames,
+                ],
+            ]);
+        }
 
         return response()->json([
             'message' => 'Inspectors assigned successfully',
@@ -194,8 +307,23 @@ class CheckSheetController extends Controller
             'inspectors.*' => 'exists:users,id',
         ]);
 
+        $removedNames = User::whereIn('id', $validated['inspectors'])->pluck('name')->toArray();
+
         $checkSheet->inspectors()->detach($validated['inspectors']);
         $checkSheet->load('inspectors');
+
+        if ($removedNames) {
+            CheckSheetHistory::create([
+                'check_sheet_id' => $checkSheet->id,
+                'user_id' => $request->user()->id,
+                'action' => 'inspectors_revoked',
+                'from_status' => $checkSheet->status,
+                'to_status' => $checkSheet->status,
+                'metadata' => [
+                    'removed' => $removedNames,
+                ],
+            ]);
+        }
 
         return response()->json([
             'message' => 'Inspectors revoked successfully',
@@ -214,7 +342,7 @@ class CheckSheetController extends Controller
      */
     public function getCheckSheetItems(CheckSheet $checkSheet)
     {
-        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'equipment', 'activity']);
+        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'equipment.category', 'equipment.subCategory', 'equipment.currentLocation', 'equipment.supplier', 'activity']);
 
         return response()->json([
             'equipment_id' => $checkSheet->equipment->id,
@@ -254,7 +382,7 @@ class CheckSheetController extends Controller
             'due_date' => $validated['due_date'],
         ]);
 
-        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment', 'reviewer']);
+        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment.category', 'equipment.subCategory', 'equipment.currentLocation', 'equipment.supplier', 'reviewer']);
 
         return response()->json([
             'message' => 'Due date updated successfully',
@@ -268,10 +396,15 @@ class CheckSheetController extends Controller
     public function saveDraftCheckSheet(Request $request, CheckSheet $checkSheet)
     {
         $validated = $request->validate([
+            'instruction' => 'nullable|string',
             'checksheet_items' => 'required|array',
             'checksheet_items.*.id' => 'required|exists:check_sheet_items,id',
             'checksheet_items.*.status' => 'required|integer|min:0|max:3',
             'checksheet_items.*.remarks' => 'nullable|string',
+        ]);
+
+        $checkSheet->update([
+            'instruction' => $validated['instruction'] ?? null,
         ]);
 
         foreach ($validated['checksheet_items'] as $item) {
@@ -340,7 +473,7 @@ class CheckSheetController extends Controller
             ],
         ]);
 
-        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment', 'reviewer']);
+        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment.category', 'equipment.subCategory', 'equipment.currentLocation', 'equipment.supplier', 'reviewer']);
 
         return response()->json([
             'message' => 'Checksheet completed successfully',
@@ -349,47 +482,13 @@ class CheckSheetController extends Controller
     }
 
     /**
-     * Review checksheet - Step 2: Completed -> Reviewed
-     */
-    public function reviewChecksheet(Request $request, CheckSheet $checkSheet)
-    {
-        if ($checkSheet->status !== 'Completed') {
-            return response()->json([
-                'message' => 'Checksheet must be in completed status to review'
-            ], 400);
-        }
-
-        $previousStatus = $checkSheet->status;
-
-        $checkSheet->update([
-            'status' => 'Reviewed',
-        ]);
-
-        // Record history
-        CheckSheetHistory::create([
-            'check_sheet_id' => $checkSheet->id,
-            'user_id' => $request->user()->id,
-            'action' => 'reviewed',
-            'from_status' => $previousStatus,
-            'to_status' => 'Reviewed',
-        ]);
-
-        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment']);
-
-        return response()->json([
-            'message' => 'Checksheet reviewed successfully',
-            'check_sheet' => new CheckSheetResource($checkSheet),
-        ]);
-    }
-
-    /**
-     * Approve checksheet - Step 3: Reviewed -> Approved
+     * Approve checksheet - Step 2: Completed -> Approved
      */
     public function approveChecksheet(Request $request, CheckSheet $checkSheet)
     {
-        if ($checkSheet->status !== 'Reviewed') {
+        if ($checkSheet->status !== 'Completed') {
             return response()->json([
-                'message' => 'Checksheet must be in reviewed status to approve'
+                'message' => 'Checksheet must be in completed status to approve'
             ], 400);
         }
 
@@ -408,10 +507,44 @@ class CheckSheetController extends Controller
             'to_status' => 'Approved',
         ]);
 
-        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment', 'reviewer']);
+        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment.category', 'equipment.subCategory', 'equipment.currentLocation', 'equipment.supplier']);
 
         return response()->json([
             'message' => 'Checksheet approved successfully',
+            'check_sheet' => new CheckSheetResource($checkSheet),
+        ]);
+    }
+
+    /**
+     * Accept checksheet - Step 3: Approved -> Accepted
+     */
+    public function acceptChecksheet(Request $request, CheckSheet $checkSheet)
+    {
+        if ($checkSheet->status !== 'Approved') {
+            return response()->json([
+                'message' => 'Checksheet must be in approved status to accept'
+            ], 400);
+        }
+
+        $previousStatus = $checkSheet->status;
+
+        $checkSheet->update([
+            'status' => 'Accepted',
+        ]);
+
+        // Record history
+        CheckSheetHistory::create([
+            'check_sheet_id' => $checkSheet->id,
+            'user_id' => $request->user()->id,
+            'action' => 'accepted',
+            'from_status' => $previousStatus,
+            'to_status' => 'Accepted',
+        ]);
+
+        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment.category', 'equipment.subCategory', 'equipment.currentLocation', 'equipment.supplier', 'reviewer']);
+
+        return response()->json([
+            'message' => 'Checksheet accepted successfully',
             'check_sheet' => new CheckSheetResource($checkSheet),
         ]);
     }
@@ -427,9 +560,9 @@ class CheckSheetController extends Controller
             ], 400);
         }
 
-        if ($checkSheet->status === 'Approved') {
+        if ($checkSheet->status === 'Accepted') {
             return response()->json([
-                'message' => 'Cannot reject an approved checksheet'
+                'message' => 'Cannot reject an accepted checksheet'
             ], 400);
         }
 
@@ -448,7 +581,7 @@ class CheckSheetController extends Controller
             'to_status' => 'Draft',
         ]);
 
-        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment']);
+        $checkSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment.category', 'equipment.subCategory', 'equipment.currentLocation', 'equipment.supplier']);
 
         return response()->json([
             'message' => 'Checksheet rejected and returned to draft',
@@ -490,9 +623,9 @@ class CheckSheetController extends Controller
      */
     public function generateNextRoundChecksheet(Request $request, CheckSheet $checkSheet)
     {
-        if ($checkSheet->status !== 'Approved') {
+        if ($checkSheet->status !== 'Accepted') {
             return response()->json([
-                'message' => 'Checksheet must be approved before generating next round'
+                'message' => 'Checksheet must be accepted before generating next round'
             ], 400);
         }
 
@@ -510,7 +643,7 @@ class CheckSheetController extends Controller
         }
 
         // Load relationships
-        $checkSheet->load(['activity', 'technicians', 'inspectors', 'checkSheetItems', 'equipment']);
+        $checkSheet->load(['activity', 'technicians', 'inspectors', 'checkSheetItems', 'equipment.category', 'equipment.subCategory', 'equipment.currentLocation', 'equipment.supplier']);
 
         // Verify activity is still assigned
         $activityExists = $checkSheet->equipment->assignedActivities()
@@ -566,7 +699,7 @@ class CheckSheetController extends Controller
             $newCheckSheet->inspectors()->sync($checkSheet->inspectors->pluck('id'));
         }
 
-        $newCheckSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment']);
+        $newCheckSheet->load(['checkSheetItems', 'technicians', 'inspectors', 'activity', 'equipment.category', 'equipment.subCategory', 'equipment.currentLocation', 'equipment.supplier']);
 
         return response()->json([
             'message' => 'Next round checksheet generated successfully',
@@ -575,4 +708,5 @@ class CheckSheetController extends Controller
             'new_round' => $nextRound,
         ]);
     }
+
 }

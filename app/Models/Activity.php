@@ -9,6 +9,8 @@ class Activity extends Model
 {
     use HasFactory;
     protected $fillable = [
+        'discipline_id',
+        'discipline_item_id',
         'code',
         'description',
         'notes',
@@ -20,6 +22,16 @@ class Activity extends Model
         'is_active' => 'boolean',
         'frequency' => 'integer',
     ];
+
+    public function discipline()
+    {
+        return $this->belongsTo(Discipline::class);
+    }
+
+    public function disciplineItem()
+    {
+        return $this->belongsTo(DisciplineItem::class);
+    }
 
     public function assignedEquipments()
     {

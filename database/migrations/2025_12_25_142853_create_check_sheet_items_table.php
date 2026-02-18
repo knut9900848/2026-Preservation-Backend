@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('check_sheet_id')->constrained()->onDelete('cascade');
             $table->text('activity')->nullable();
             $table->text('description')->nullable();
-            $table->tinyInteger('status')->default(0); // 0: Rejected, 1: completed, 2: 'Holding', 3: 'N/A'
+            $table->tinyInteger('status')->default(0); // 0: Y, 1: AR, 2: 'N/A', 3: 'H'
             $table->text('remarks')->nullable();
             $table->integer('order')->default(0);
             $table->timestamps();
