@@ -247,7 +247,7 @@
                     @foreach($group->photos as $photo)
                     <td class="text-center p-3 w-1/2 border border-slate-100 align-top">
                         <div class="bg-slate-50 rounded-md p-2 inline-block">
-                            <img src="{{ public_path('storage/' . $photo->path) }}" alt="{{ $photo->original_filename }}" class="max-h-180px max-w-full rounded" style="max-height: 180px;">
+                            <img src="{{ public_path('storage/' . ($photo->thumbnail_path ?? $photo->path)) }}" alt="{{ $photo->original_filename }}" class="max-w-full rounded" style="max-height: 200px; aspect-ratio: 4/3; object-fit: cover;">
                         </div>
                         <div class="text-[9px] text-slate-400 mt-1.5 truncate">{{ $photo->original_filename }}</div>
                     </td>

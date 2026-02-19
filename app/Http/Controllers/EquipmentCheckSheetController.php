@@ -46,8 +46,8 @@ class EquipmentCheckSheetController extends Controller
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by', 'created_at');
-        $descending = filter_var($request->get('descending', true), FILTER_VALIDATE_BOOLEAN);
+        $sortBy = $request->query('sort_by', 'created_at');
+        $descending = filter_var($request->query('descending', true), FILTER_VALIDATE_BOOLEAN);
         $query->orderBy($sortBy, $descending ? 'desc' : 'asc');
 
         // Pagination

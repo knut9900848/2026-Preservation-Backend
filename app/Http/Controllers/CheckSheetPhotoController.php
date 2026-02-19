@@ -8,6 +8,8 @@ use App\Models\CheckSheetPhotoGroup;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Intervention\Image\Drivers\Gd\Driver;
+use Intervention\Image\ImageManager;
 
 class CheckSheetPhotoController extends Controller
 {
@@ -31,6 +33,7 @@ class CheckSheetPhotoController extends Controller
                             'filename' => $photo->original_filename,
                             'url' => $photo->url,
                             'size' => $photo->size,
+                            'thumbnail_url' => $photo->thumbnail_url,
                             'uploaded_at' => $photo->created_at->toISOString(),
                         ];
                     }),
@@ -77,18 +80,31 @@ class CheckSheetPhotoController extends Controller
         $maxPhotoOrder = $photoGroup->photos()->max('order') ?? 0;
 
         foreach ($request->file('photos') as $index => $file) {
-            $filename = Str::uuid() . '.' . $file->getClientOriginalExtension();
+            $filename = Str::uuid().'.'.$file->getClientOriginalExtension();
             $path = $file->storeAs(
-                'checksheet-photos/' . $checkSheet->id . '/' . $photoGroup->id,
+                'checksheet-photos/'.$checkSheet->id.'/'.$photoGroup->id,
                 $filename,
                 'public'
             );
+
+            // Generate center-cropped 4:3 thumbnail (1024x768) for PDF reports
+            $thumbnailFilename = 'thumb_'.$filename;
+            $thumbnailDir = 'checksheet-photos/'.$checkSheet->id.'/'.$photoGroup->id.'/thumbnails';
+            $thumbnailPath = $thumbnailDir.'/'.$thumbnailFilename;
+
+            $manager = new ImageManager(new Driver);
+            $image = $manager->read($file->getRealPath());
+            $image->cover(1024, 768);
+
+            Storage::disk('public')->makeDirectory($thumbnailDir);
+            Storage::disk('public')->put($thumbnailPath, $image->encodeByExtension($file->getClientOriginalExtension())->toString());
 
             $photo = CheckSheetPhoto::create([
                 'photo_group_id' => $photoGroup->id,
                 'filename' => $filename,
                 'original_filename' => $file->getClientOriginalName(),
                 'path' => $path,
+                'thumbnail_path' => $thumbnailPath,
                 'mime_type' => $file->getMimeType(),
                 'size' => $file->getSize(),
                 'order' => $maxPhotoOrder + $index + 1,
@@ -112,6 +128,7 @@ class CheckSheetPhotoController extends Controller
                         'filename' => $photo->original_filename,
                         'url' => $photo->url,
                         'size' => $photo->size,
+                        'thumbnail_url' => $photo->thumbnail_url,
                         'uploaded_at' => $photo->created_at->toISOString(),
                     ];
                 }),
@@ -128,7 +145,7 @@ class CheckSheetPhotoController extends Controller
         // Verify the photo group belongs to this checksheet
         if ($photoGroup->check_sheet_id !== $checkSheet->id) {
             return response()->json([
-                'message' => 'Photo group not found for this checksheet'
+                'message' => 'Photo group not found for this checksheet',
             ], 404);
         }
 
@@ -158,13 +175,16 @@ class CheckSheetPhotoController extends Controller
         // Verify the photo group belongs to this checksheet
         if ($photoGroup->check_sheet_id !== $checkSheet->id) {
             return response()->json([
-                'message' => 'Photo group not found for this checksheet'
+                'message' => 'Photo group not found for this checksheet',
             ], 404);
         }
 
-        // Delete all photos from storage
+        // Delete all photos and thumbnails from storage
         foreach ($photoGroup->photos as $photo) {
             Storage::disk('public')->delete($photo->path);
+            if ($photo->thumbnail_path) {
+                Storage::disk('public')->delete($photo->thumbnail_path);
+            }
         }
 
         // Delete the group (photos will be cascade deleted)
@@ -184,19 +204,22 @@ class CheckSheetPhotoController extends Controller
         // Verify the photo group belongs to this checksheet
         if ($photoGroup->check_sheet_id !== $checkSheet->id) {
             return response()->json([
-                'message' => 'Photo group not found for this checksheet'
+                'message' => 'Photo group not found for this checksheet',
             ], 404);
         }
 
         // Verify the photo belongs to this group
         if ($photo->photo_group_id !== $photoGroup->id) {
             return response()->json([
-                'message' => 'Photo not found in this group'
+                'message' => 'Photo not found in this group',
             ], 404);
         }
 
-        // Delete from storage
+        // Delete from storage (original + thumbnail)
         Storage::disk('public')->delete($photo->path);
+        if ($photo->thumbnail_path) {
+            Storage::disk('public')->delete($photo->thumbnail_path);
+        }
 
         // Delete record
         $photo->delete();

@@ -54,8 +54,8 @@ class EquipmentController extends Controller
         }
 
         // Sorting
-        $sortBy = $request->get('sort_by', 'created_at');
-        $descending = filter_var($request->get('descending', true), FILTER_VALIDATE_BOOLEAN);
+        $sortBy = $request->query('sort_by', 'created_at');
+        $descending = filter_var($request->query('descending', true), FILTER_VALIDATE_BOOLEAN);
         $query->orderBy($sortBy, $descending ? 'desc' : 'asc');
 
         // Pagination
@@ -194,7 +194,7 @@ class EquipmentController extends Controller
     {
         // Get all active activities with their items
         $activities = Activity::where('is_active', true)
-            ->with('activityItems')
+            ->with(['activityItems', 'discipline', 'disciplineItem'])
             ->orderBy('code')
             ->get();
 

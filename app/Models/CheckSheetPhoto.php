@@ -15,6 +15,7 @@ class CheckSheetPhoto extends Model
         'filename',
         'original_filename',
         'path',
+        'thumbnail_path',
         'mime_type',
         'size',
         'order',
@@ -25,7 +26,7 @@ class CheckSheetPhoto extends Model
         'order' => 'integer',
     ];
 
-    protected $appends = ['url'];
+    protected $appends = ['url', 'thumbnail_url'];
 
     public function photoGroup()
     {
@@ -35,5 +36,10 @@ class CheckSheetPhoto extends Model
     public function getUrlAttribute()
     {
         return Storage::url($this->path);
+    }
+
+    public function getThumbnailUrlAttribute()
+    {
+        return $this->thumbnail_path ? Storage::url($this->thumbnail_path) : null;
     }
 }

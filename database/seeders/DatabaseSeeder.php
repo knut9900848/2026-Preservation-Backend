@@ -29,10 +29,11 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             SubCategorySeeder::class,
             EquipmentSeeder::class,
-            ActivitySeeder::class,
             DisciplineSeeder::class,
             DisciplineItemSeeder::class,
             SettingSeeder::class,
+            ActivitySeeder::class,
+            ActivityItemSeeder::class,
         ]);
     }
 }
