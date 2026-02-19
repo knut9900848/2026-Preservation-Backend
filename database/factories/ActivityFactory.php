@@ -17,11 +17,11 @@ class ActivityFactory extends Factory
     public function definition(): array
     {
         return [
-            'code' => 'ACT-' . fake()->unique()->numberBetween(10000, 99999),
-            'description' => fake()->sentence(6),
-            'notes' => fake()->boolean(70) ? fake()->paragraph() : null,
-            'frequency' => fake()->numberBetween(1, 365),
-            'is_active' => fake()->boolean(90),
+            // 'code' => 'ACT-' . fake()->unique()->numberBetween(10000, 99999),
+            // 'description' => fake()->sentence(6),
+            // 'notes' => fake()->boolean(70) ? fake()->paragraph() : null,
+            // 'frequency' => fake()->numberBetween(1, 365),
+            // 'is_active' => fake()->boolean(90),
         ];
     }
 }
