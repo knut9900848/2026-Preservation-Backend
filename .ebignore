@@ -1,0 +1,8 @@
+cat > /Users/yooyonghoon/Herd/2026-Preservation-Backend/.ebignore << 'EOF'
+/node_modules
+/.git
+/.env
+/tests
+/.vscode
+/.idea
+EOF
