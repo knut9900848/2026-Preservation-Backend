@@ -31,6 +31,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        // 외래 키 제약 조건 일시 비활성화
+        Schema::disableForeignKeyConstraints();
         Schema::dropIfExists('equipment');
+        // 다시 활성화
+        Schema::enableForeignKeyConstraints();
     }
 };
