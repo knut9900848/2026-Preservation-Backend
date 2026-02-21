@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('check_sheets', function (Blueprint $table) {
-            $table->text('instruction')->nullable()->default("Preservation Instructions:\nIf the Unit / Equipment is operational or under commissioning, DO NOT execute this check sheet and activities.\nIf any of the Activities are not able to be performed, explain in detail in the Remarks column & inform Preservation Supervisor / Coordinator.\nIf any of the equipment is found to be damaged, a punch list shall be raised.\nEnsure the preservation Label is filled & signed after preservation routine activity.")->after('notes');
+            $table->text('instruction')->nullable();
         });
     }
 
