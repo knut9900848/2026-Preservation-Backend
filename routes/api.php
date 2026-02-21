@@ -27,11 +27,15 @@ use App\Http\Controllers\DisciplineItemController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-    // PDF Test
-    Route::get('pdf/test', [PdfController::class, 'testDownload']);
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok']);
+});
 
-    // CheckSheet Report PDF (Preview)
-    Route::get('checksheets/{checkSheet}/report', [CheckSheetReportController::class, 'preview']);
+// PDF Test
+Route::get('pdf/test', [PdfController::class, 'testDownload']);
+
+// CheckSheet Report PDF (Preview)
+Route::get('checksheets/{checkSheet}/report', [CheckSheetReportController::class, 'preview']);
 
 Route::get('/user', function (Request $request) {
     return $request->user();

@@ -5,4 +5,5 @@ cat > /Users/yooyonghoon/Herd/2026-Preservation-Backend/.ebignore << 'EOF'
 /tests
 /.vscode
 /.idea
+/vendor
 EOF
