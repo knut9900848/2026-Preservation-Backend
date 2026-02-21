@@ -22,8 +22,16 @@ class PdfController extends Controller
             ],
         ];
 
-        return Pdf::view('pdf.test', $data)
-            ->format('a4')
-            ->name('test-report.pdf');
+        $pdf = Pdf::view('pdf.test', $data)
+            ->format('a4');
+
+        if ($chromePath = config('laravel-pdf.browsershot.chrome_path')) {
+            $pdf->withBrowsershot(function ($browsershot) use ($chromePath) {
+                $browsershot->setChromePath($chromePath)
+                    ->noSandbox();
+            });
+        }
+
+        return $pdf->name('test-report.pdf');
     }
 }

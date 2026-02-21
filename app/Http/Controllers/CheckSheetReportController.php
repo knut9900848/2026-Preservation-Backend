@@ -55,9 +55,17 @@ class CheckSheetReportController extends Controller
     {
         $data = $this->getPdfData($checkSheet);
 
-        return Pdf::view('pdf.preservation-report', $data)
-            ->format('a4')
-            ->name('preservation-report-' . $checkSheet->sheet_number . '.pdf');
+        $pdf = Pdf::view('pdf.preservation-report', $data)
+            ->format('a4');
+
+        if ($chromePath = config('laravel-pdf.browsershot.chrome_path')) {
+            $pdf->withBrowsershot(function ($browsershot) use ($chromePath) {
+                $browsershot->setChromePath($chromePath)
+                    ->noSandbox();
+            });
+        }
+
+        return $pdf->name('preservation-report-' . $checkSheet->sheet_number . '.pdf');
     }
 
     /**
@@ -111,10 +119,17 @@ class CheckSheetReportController extends Controller
         $storagePath = 'checksheet-reports/' . $checkSheet->id . '/' . $fileName;
 
         // Generate and save PDF to local disk
-        Pdf::view('pdf.preservation-report', $data)
-            ->format('a4')
-            ->disk('local')
-            ->save($storagePath);
+        $pdf = Pdf::view('pdf.preservation-report', $data)
+            ->format('a4');
+
+        if ($chromePath = config('laravel-pdf.browsershot.chrome_path')) {
+            $pdf->withBrowsershot(function ($browsershot) use ($chromePath) {
+                $browsershot->setChromePath($chromePath)
+                    ->noSandbox();
+            });
+        }
+
+        $pdf->disk('local')->save($storagePath);
 
         // Get file size
         $fileSize = Storage::disk('local')->size($storagePath);

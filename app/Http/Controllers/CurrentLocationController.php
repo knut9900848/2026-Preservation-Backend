@@ -17,7 +17,6 @@ class CurrentLocationController extends Controller
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
                     ->orWhere('code', 'like', "%{$search}%")
-                    ->orWhere('building', 'like', "%{$search}%")
                     ->orWhere('description', 'like', "%{$search}%");
             });
         }
@@ -45,9 +44,6 @@ class CurrentLocationController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'code' => 'required|string|unique:current_locations,code',
-            'building' => 'nullable|string|max:255',
-            'floor' => 'nullable|string|max:50',
-            'room' => 'nullable|string|max:50',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
@@ -70,9 +66,6 @@ class CurrentLocationController extends Controller
         $validated = $request->validate([
             'name' => 'sometimes|required|string|max:255',
             'code' => 'sometimes|required|string|unique:current_locations,code,' . $currentLocation->id,
-            'building' => 'nullable|string|max:255',
-            'floor' => 'nullable|string|max:50',
-            'room' => 'nullable|string|max:50',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);

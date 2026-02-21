@@ -11,9 +11,6 @@ class CurrentLocation extends Model
     protected $fillable = [
         'name',
         'code',
-        'building',
-        'floor',
-        'room',
         'description',
         'is_active',
     ];

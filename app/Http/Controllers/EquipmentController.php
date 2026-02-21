@@ -95,7 +95,7 @@ class EquipmentController extends Controller
                 ->get(['id', 'name', 'code']),
             'current_locations' => CurrentLocation::where('is_active', true)
                 ->orderBy('name')
-                ->get(['id', 'name', 'code', 'building', 'floor', 'room']),
+                ->get(['id', 'name', 'code']),
         ]);
     }
 
