@@ -3,6 +3,10 @@ rm -rf /var/app/current/bootstrap/cache/*.php
 chown -R webapp:webapp /var/app/current/storage /var/app/current/bootstrap/cache
 chmod -R 775 /var/app/current/storage /var/app/current/bootstrap/cache
 
+# Fix storage symlink
+rm -f /var/app/current/public/storage
+ln -s /var/app/current/storage/app/public /var/app/current/public/storage
+
 cd /var/app/current
 sudo -u webapp php artisan config:cache
 sudo -u webapp php artisan route:cache

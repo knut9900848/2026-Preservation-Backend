@@ -684,7 +684,7 @@ class CheckSheetController extends Controller
                 'check_sheet_id' => $newCheckSheet->id,
                 'activity' => $item->activity,
                 'description' => $item->description,
-                'status' => 'Draft',
+                'status' => 0,
                 'order' => $item->order,
             ]);
         }

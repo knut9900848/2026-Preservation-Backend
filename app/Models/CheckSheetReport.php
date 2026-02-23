@@ -35,6 +35,6 @@ class CheckSheetReport extends Model
 
     public function fileExists(): bool
     {
-        return Storage::disk('local')->exists($this->file_path);
+        return Storage::disk('s3')->exists($this->file_path);
     }
 }

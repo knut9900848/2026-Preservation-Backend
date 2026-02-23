@@ -84,7 +84,7 @@ class CheckSheetPhotoController extends Controller
             $path = $file->storeAs(
                 'checksheet-photos/'.$checkSheet->id.'/'.$photoGroup->id,
                 $filename,
-                'public'
+                's3'
             );
 
             // Generate center-cropped 4:3 thumbnail (1024x768) for PDF reports
@@ -96,8 +96,8 @@ class CheckSheetPhotoController extends Controller
             $image = $manager->read($file->getRealPath());
             $image->cover(1024, 768);
 
-            Storage::disk('public')->makeDirectory($thumbnailDir);
-            Storage::disk('public')->put($thumbnailPath, $image->encodeByExtension($file->getClientOriginalExtension())->toString());
+            Storage::disk('s3')->makeDirectory($thumbnailDir);
+            Storage::disk('s3')->put($thumbnailPath, $image->encodeByExtension($file->getClientOriginalExtension())->toString());
 
             $photo = CheckSheetPhoto::create([
                 'photo_group_id' => $photoGroup->id,
@@ -181,9 +181,9 @@ class CheckSheetPhotoController extends Controller
 
         // Delete all photos and thumbnails from storage
         foreach ($photoGroup->photos as $photo) {
-            Storage::disk('public')->delete($photo->path);
+            Storage::disk('s3')->delete($photo->path);
             if ($photo->thumbnail_path) {
-                Storage::disk('public')->delete($photo->thumbnail_path);
+                Storage::disk('s3')->delete($photo->thumbnail_path);
             }
         }
 
@@ -216,9 +216,9 @@ class CheckSheetPhotoController extends Controller
         }
 
         // Delete from storage (original + thumbnail)
-        Storage::disk('public')->delete($photo->path);
+        Storage::disk('s3')->delete($photo->path);
         if ($photo->thumbnail_path) {
-            Storage::disk('public')->delete($photo->thumbnail_path);
+            Storage::disk('s3')->delete($photo->thumbnail_path);
         }
 
         // Delete record

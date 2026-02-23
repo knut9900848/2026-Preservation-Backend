@@ -118,7 +118,7 @@ class CheckSheetReportController extends Controller
             : $baseName . '.pdf';
         $storagePath = 'checksheet-reports/' . $checkSheet->id . '/' . $fileName;
 
-        // Generate and save PDF to local disk
+        // Generate and save PDF to S3
         $pdf = Pdf::view('pdf.preservation-report', $data)
             ->format('a4');
 
@@ -129,10 +129,10 @@ class CheckSheetReportController extends Controller
             });
         }
 
-        $pdf->disk('local')->save($storagePath);
+        $pdf->disk('s3')->save($storagePath);
 
         // Get file size
-        $fileSize = Storage::disk('local')->size($storagePath);
+        $fileSize = Storage::disk('s3')->size($storagePath);
 
         // Create report record
         $report = CheckSheetReport::create([
@@ -179,9 +179,7 @@ class CheckSheetReportController extends Controller
             return response()->json(['message' => 'PDF file not found on disk'], 404);
         }
 
-        $fullPath = Storage::disk('local')->path($report->file_path);
-
-        return response()->download($fullPath, $report->file_name, [
+        return Storage::disk('s3')->download($report->file_path, $report->file_name, [
             'Content-Type' => 'application/pdf',
         ]);
     }

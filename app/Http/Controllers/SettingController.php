@@ -53,17 +53,17 @@ class SettingController extends Controller
         // Handle IES logo upload
         if ($request->hasFile('ies_logo')) {
             if ($setting->ies_logo) {
-                Storage::disk('public')->delete($setting->ies_logo);
+                Storage::disk('s3')->delete($setting->ies_logo);
             }
-            $validated['ies_logo'] = $request->file('ies_logo')->store('settings', 'public');
+            $validated['ies_logo'] = $request->file('ies_logo')->store('settings', 's3');
         }
 
         // Handle Client logo upload
         if ($request->hasFile('client_logo')) {
             if ($setting->client_logo) {
-                Storage::disk('public')->delete($setting->client_logo);
+                Storage::disk('s3')->delete($setting->client_logo);
             }
-            $validated['client_logo'] = $request->file('client_logo')->store('settings', 'public');
+            $validated['client_logo'] = $request->file('client_logo')->store('settings', 's3');
         }
 
         $setting->update($validated);
