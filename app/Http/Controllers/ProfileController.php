@@ -20,7 +20,7 @@ class ProfileController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'avatar' => $user->avatar ? Storage::disk('s3')->url($user->avatar) : null,
+                'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
                 'phone' => $user->phone,
                 'date_of_birth' => $user->date_of_birth,
                 'job_start_date' => $user->job_start_date,
@@ -63,7 +63,7 @@ class ProfileController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'avatar' => $user->avatar ? Storage::disk('s3')->url($user->avatar) : null,
+                'avatar' => $user->avatar ? Storage::url($user->avatar) : null,
                 'phone' => $user->phone,
                 'date_of_birth' => $user->date_of_birth,
                 'job_start_date' => $user->job_start_date,
@@ -119,12 +119,12 @@ class ProfileController extends Controller
         ]);
 
         // Delete old avatar if exists
-        if ($user->avatar && Storage::disk('s3')->exists($user->avatar)) {
-            Storage::disk('s3')->delete($user->avatar);
+        if ($user->avatar && Storage::exists($user->avatar)) {
+            Storage::delete($user->avatar);
         }
 
         // Store new avatar
-        $path = $request->file('avatar')->store('avatars', 's3');
+        $path = $request->file('avatar')->store('avatars');
 
         // Update user avatar path
         $user->update([
@@ -133,7 +133,7 @@ class ProfileController extends Controller
 
         return response()->json([
             'message' => 'Avatar updated successfully',
-            'avatar' => Storage::disk('s3')->url($path)
+            'avatar' => Storage::url($path)
         ]);
     }
 
@@ -145,8 +145,8 @@ class ProfileController extends Controller
         $user = $request->user();
 
         // Delete avatar file if exists
-        if ($user->avatar && Storage::disk('s3')->exists($user->avatar)) {
-            Storage::disk('s3')->delete($user->avatar);
+        if ($user->avatar && Storage::exists($user->avatar)) {
+            Storage::delete($user->avatar);
         }
 
         // Clear avatar path from database

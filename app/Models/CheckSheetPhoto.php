@@ -35,11 +35,11 @@ class CheckSheetPhoto extends Model
 
     public function getUrlAttribute()
     {
-        return Storage::disk('s3')->url($this->path);
+        return Storage::url($this->path);
     }
 
     public function getThumbnailUrlAttribute()
     {
-        return $this->thumbnail_path ? Storage::disk('s3')->url($this->thumbnail_path) : null;
+        return $this->thumbnail_path ? Storage::url($this->thumbnail_path) : null;
     }
 }

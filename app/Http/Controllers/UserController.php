@@ -137,8 +137,8 @@ class UserController extends Controller
     public function destroy(User $user)
     {
         // Delete avatar if exists
-        if ($user->avatar && Storage::disk('s3')->exists($user->avatar)) {
-            Storage::disk('s3')->delete($user->avatar);
+        if ($user->avatar && Storage::exists($user->avatar)) {
+            Storage::delete($user->avatar);
         }
 
         $user->delete();

@@ -129,10 +129,10 @@ class CheckSheetReportController extends Controller
             });
         }
 
-        $pdf->disk('s3')->save($storagePath);
+        $pdf->disk(config('filesystems.default'))->save($storagePath);
 
         // Get file size
-        $fileSize = Storage::disk('s3')->size($storagePath);
+        $fileSize = Storage::size($storagePath);
 
         // Create report record
         $report = CheckSheetReport::create([
@@ -179,7 +179,7 @@ class CheckSheetReportController extends Controller
             return response()->json(['message' => 'PDF file not found on disk'], 404);
         }
 
-        return Storage::disk('s3')->download($report->file_path, $report->file_name, [
+        return Storage::download($report->file_path, $report->file_name, [
             'Content-Type' => 'application/pdf',
         ]);
     }

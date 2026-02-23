@@ -662,7 +662,7 @@ class CheckSheetController extends Controller
         $nextDueDate = null;
         if ($checkSheet->due_date && $checkSheet->frequency) {
             $nextDueDate = \Carbon\Carbon::parse($checkSheet->due_date)
-                ->addDays($checkSheet->frequency)
+                ->addWeeks($checkSheet->frequency)
                 ->format('Y-m-d');
         }
 
