@@ -14,8 +14,8 @@ return new class extends Migration
         Schema::create('activity_items', function (Blueprint $table) {
             $table->id();
             $table->foreignId('activity_id')->constrained()->onDelete('cascade');
-            $table->text('activity')->nullable();
             $table->text('description')->nullable();
+            $table->text('remark')->nullable();
             $table->integer('order')->default(0);
             $table->boolean('is_active')->default(true);
             $table->timestamps();

@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('filename');
             $table->string('original_filename');
             $table->string('path');
+            $table->string('thumbnail_path')->nullable();
             $table->string('mime_type')->nullable();
             $table->unsignedBigInteger('size')->default(0);
             $table->integer('order')->default(0);

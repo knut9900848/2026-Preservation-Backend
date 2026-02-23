@@ -21,6 +21,8 @@ return new class extends Migration
             $table->date('job_start_date')->nullable();
             $table->date('job_end_date')->nullable();
             $table->string('password');
+            $table->string('user_type')->default('worker');
+            $table->string('avatar')->nullable();
             $table->boolean('is_active')->default(true);
             $table->rememberToken();
             $table->timestamps();

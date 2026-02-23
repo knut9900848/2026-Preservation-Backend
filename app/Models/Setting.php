@@ -3,9 +3,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Setting extends Model
 {
+    protected $appends = ['ies_logo_url', 'client_logo_url'];
+
     protected $fillable = [
         // IES (Company) Information
         'ies_name',
@@ -35,5 +38,31 @@ class Setting extends Model
     public static function instance(): self
     {
         return static::firstOrCreate(['id' => 1]);
+    }
+
+    public function getIesLogoUrlAttribute()
+    {
+        if (!$this->ies_logo) {
+            return null;
+        }
+
+        if (config('filesystems.default') === 's3') {
+            return Storage::temporaryUrl($this->ies_logo, now()->addMinutes(60));
+        }
+
+        return Storage::url($this->ies_logo);
+    }
+
+    public function getClientLogoUrlAttribute()
+    {
+        if (!$this->client_logo) {
+            return null;
+        }
+
+        if (config('filesystems.default') === 's3') {
+            return Storage::temporaryUrl($this->client_logo, now()->addMinutes(60));
+        }
+
+        return Storage::url($this->client_logo);
     }
 }

@@ -35,11 +35,23 @@ class CheckSheetPhoto extends Model
 
     public function getUrlAttribute()
     {
+        if (config('filesystems.default') === 's3') {
+            return Storage::temporaryUrl($this->path, now()->addMinutes(60));
+        }
+
         return Storage::url($this->path);
     }
 
     public function getThumbnailUrlAttribute()
     {
-        return $this->thumbnail_path ? Storage::url($this->thumbnail_path) : null;
+        if (!$this->thumbnail_path) {
+            return null;
+        }
+
+        if (config('filesystems.default') === 's3') {
+            return Storage::temporaryUrl($this->thumbnail_path, now()->addMinutes(60));
+        }
+
+        return Storage::url($this->thumbnail_path);
     }
 }

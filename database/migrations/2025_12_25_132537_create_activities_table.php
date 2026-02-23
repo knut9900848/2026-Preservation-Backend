@@ -13,6 +13,8 @@ return new class extends Migration
     {
         Schema::create('activities', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('discipline_id')->nullable()->constrained()->nullOnDelete();
+            $table->foreignId('discipline_item_id')->nullable()->constrained()->nullOnDelete();
             $table->string('code')->unique();
             $table->string('description');
             $table->text('notes')->nullable();

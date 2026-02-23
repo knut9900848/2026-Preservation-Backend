@@ -20,6 +20,7 @@ return new class extends Migration
             $table->string('sheet_number')->unique();
             $table->date('due_date')->nullable();
             $table->text('notes')->nullable();
+            $table->text('instruction')->nullable();
             $table->tinyInteger('frequency')->default(0);
             $table->string('status')->nullable(); // Draft, Completed, Reviewed, Approved
             $table->timestamps();

@@ -50,7 +50,7 @@
         {{-- Company (IES) Logo --}}
         <div class="flex items-center gap-2">
             @if($setting->ies_logo)
-                <img src="{{ Storage::url($setting->ies_logo) }}" alt="{{ $setting->ies_name }}" style="height: 48px; width: 120px; object-fit: contain;">
+                <img src="{{ $setting->ies_logo_url }}" alt="{{ $setting->ies_name }}" style="height: 48px; width: 120px; object-fit: contain;">
             @else
                 <div class="w-12 h-12 bg-primary-600 rounded-lg flex items-center justify-center">
                     <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -72,7 +72,7 @@
         {{-- Client Logo --}}
         <div class="flex items-center gap-2">
             @if($setting->client_logo)
-                <img src="{{ Storage::url($setting->client_logo) }}" alt="{{ $setting->client_name }}" style="height: 48px; width: 120px; object-fit: contain;">
+                <img src="{{ $setting->client_logo_url }}" alt="{{ $setting->client_name }}" style="height: 48px; width: 120px; object-fit: contain;">
             @else
                 <div class="w-12 h-12 bg-slate-100 rounded-lg border border-slate-200 flex items-center justify-center">
                     <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,7 +248,7 @@
                     @foreach($group->photos as $photo)
                     <td class="text-center p-3 w-1/2 border border-slate-100 align-top">
                         <div class="bg-slate-50 rounded-md p-2 inline-block">
-                            <img src="{{ Storage::url($photo->path) }}" alt="{{ $photo->original_filename }}" class="max-h-180px max-w-full rounded" style="max-height: 180px;">
+                            <img src="{{ $photo->url }}" alt="{{ $photo->original_filename }}" class="max-h-180px max-w-full rounded" style="max-height: 180px;">
                         </div>
                         <div class="text-[9px] text-slate-400 mt-1.5 truncate">{{ $photo->original_filename }}</div>
                     </td>

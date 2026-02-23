@@ -1,4 +1,3 @@
-cat > /Users/yooyonghoon/Herd/2026-Preservation-Backend/.ebignore << 'EOF'
 /node_modules
 /.git
 /.env
@@ -6,4 +5,5 @@ cat > /Users/yooyonghoon/Herd/2026-Preservation-Backend/.ebignore << 'EOF'
 /.vscode
 /.idea
 /vendor
-EOF
+/public/storage
+.DS_Store

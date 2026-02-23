@@ -19,7 +19,7 @@ class CheckSheetController extends Controller
      */
     public function index(Request $request)
     {
-        $query = CheckSheet::with(['activity', 'equipment.category', 'equipment.subCategory', 'equipment.currentLocation', 'equipment.supplier', 'reviewer', 'checkSheetItems', 'technicians', 'inspectors']);
+        $query = CheckSheet::with(['activity', 'equipment.category', 'equipment.subCategory', 'equipment.currentLocation', 'equipment.supplier', 'reviewer', 'technicians', 'inspectors']);
 
         // Technician role: only show checksheets assigned to them
         $user = $request->user();

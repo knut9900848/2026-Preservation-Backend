@@ -95,7 +95,6 @@ class CheckSheetPhotoController extends Controller
             $image = $manager->read($file->getRealPath());
             $image->cover(1024, 768);
 
-            Storage::makeDirectory($thumbnailDir);
             Storage::put($thumbnailPath, $image->encodeByExtension($file->getClientOriginalExtension())->toString());
 
             $photo = CheckSheetPhoto::create([
